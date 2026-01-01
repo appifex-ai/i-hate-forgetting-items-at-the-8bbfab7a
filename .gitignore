@@ -1,0 +1,20 @@
+
+# Sandbox system files - DO NOT TRACK (added by Appifex)
+/.bash_logout
+/.bashrc
+/.bash_history
+/.bash_profile
+/.profile
+/.gitconfig
+/.cache
+/.config
+/.npm
+/.expo
+/.local
+/.wget-hsts
+/.yarnrc
+
+# Logs and temporary files
+*.log
+.DS_Store
+*~
