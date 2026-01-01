@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Text } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -41,8 +42,8 @@ export default function TabLayout() {
 
 function TabIcon({ icon, color }: { icon: string; color: string }) {
   return (
-    <span style={{ fontSize: 24, filter: color === '#6366f1' ? 'none' : 'grayscale(100%)' }}>
+    <Text style={{ fontSize: 24, opacity: color === '#6366f1' ? 1 : 0.5 }}>
       {icon}
-    </span>
+    </Text>
   );
 }
