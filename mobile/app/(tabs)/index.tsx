@@ -7,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   Alert,
+  Modal,
 } from 'react-native';
 import { itemsApi, storesApi } from '@/lib/api';
 import type { ShoppingItem, Store } from '@/types/api';
@@ -19,6 +20,8 @@ export default function ShoppingListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
+  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
 
   const loadData = async () => {
     try {
@@ -73,8 +76,18 @@ export default function ShoppingListScreen() {
     }
   };
 
+  const handleSelectStore = (storeId: number | null) => {
+    setSelectedStoreId(storeId);
+    setShowStoreDropdown(false);
+  };
+
+  // Filter items by selected store
+  const filteredItems = selectedStoreId 
+    ? items.filter((item) => item.store_id === selectedStoreId)
+    : items;
+
   // Group items by store
-  const groupedItems = items.reduce((acc, item) => {
+  const groupedItems = filteredItems.reduce((acc, item) => {
     const storeId = item.store_id;
     if (!acc[storeId]) {
       acc[storeId] = [];
@@ -84,8 +97,13 @@ export default function ShoppingListScreen() {
   }, {} as Record<number, ShoppingItem[]>);
 
   // Separate checked and unchecked items
-  const uncheckedItems = items.filter((item) => !item.is_checked);
-  const checkedItems = items.filter((item) => item.is_checked);
+  const uncheckedItems = filteredItems.filter((item) => !item.is_checked);
+  const checkedItems = filteredItems.filter((item) => item.is_checked);
+
+  // Get selected store info
+  const selectedStore = selectedStoreId 
+    ? stores.find((s) => s.id === selectedStoreId)
+    : null;
 
   if (loading) {
     return (
@@ -99,6 +117,23 @@ export default function ShoppingListScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Shopping List</Text>
+        
+        {/* Store Filter Dropdown */}
+        <Pressable 
+          style={styles.storeFilter}
+          onPress={() => setShowStoreDropdown(true)}
+        >
+          <View style={styles.storeFilterContent}>
+            <Text style={styles.storeFilterIcon}>
+              {selectedStore ? selectedStore.icon : '🏪'}
+            </Text>
+            <Text style={styles.storeFilterText}>
+              {selectedStore ? selectedStore.name : 'All Stores'}
+            </Text>
+            <Text style={styles.dropdownIcon}>▼</Text>
+          </View>
+        </Pressable>
+
         <Text style={styles.subtitle}>
           {uncheckedItems.length} item{uncheckedItems.length !== 1 ? 's' : ''} to buy
         </Text>
@@ -182,6 +217,73 @@ export default function ShoppingListScreen() {
         onSubmit={handleAddItem}
         stores={stores}
       />
+
+      {/* Store Filter Dropdown Modal */}
+      <Modal
+        visible={showStoreDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowStoreDropdown(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setShowStoreDropdown(false)}
+        >
+          <View style={styles.dropdownContainer}>
+            <Text style={styles.dropdownTitle}>Select Store</Text>
+            
+            {/* All Stores Option */}
+            <Pressable
+              style={[
+                styles.dropdownOption,
+                selectedStoreId === null && styles.dropdownOptionSelected,
+              ]}
+              onPress={() => handleSelectStore(null)}
+            >
+              <Text style={styles.dropdownOptionIcon}>🏪</Text>
+              <Text style={[
+                styles.dropdownOptionText,
+                selectedStoreId === null && styles.dropdownOptionTextSelected,
+              ]}>
+                All Stores
+              </Text>
+              {selectedStoreId === null && (
+                <Text style={styles.checkmark}>✓</Text>
+              )}
+            </Pressable>
+
+            {/* Individual Stores */}
+            {stores.map((store) => (
+              <Pressable
+                key={store.id}
+                style={[
+                  styles.dropdownOption,
+                  selectedStoreId === store.id && styles.dropdownOptionSelected,
+                ]}
+                onPress={() => handleSelectStore(store.id)}
+              >
+                <Text style={styles.dropdownOptionIcon}>{store.icon}</Text>
+                <Text style={[
+                  styles.dropdownOptionText,
+                  selectedStoreId === store.id && styles.dropdownOptionTextSelected,
+                ]}>
+                  {store.name}
+                </Text>
+                {selectedStoreId === store.id && (
+                  <Text style={styles.checkmark}>✓</Text>
+                )}
+              </Pressable>
+            ))}
+
+            <Pressable
+              style={styles.dropdownClose}
+              onPress={() => setShowStoreDropdown(false)}
+            >
+              <Text style={styles.dropdownCloseText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -203,10 +305,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#111827',
   },
+  storeFilter: {
+    marginTop: 12,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  storeFilterContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  storeFilterIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  storeFilterText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  dropdownIcon: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
-    marginTop: 4,
+    marginTop: 12,
   },
   content: {
     flex: 1,
@@ -310,5 +438,65 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: 'white',
     fontWeight: '300',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    width: '80%',
+    maxHeight: '70%',
+    overflow: 'hidden',
+  },
+  dropdownTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  dropdownOptionSelected: {
+    backgroundColor: '#f3f4f6',
+  },
+  dropdownOptionIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  dropdownOptionText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+  },
+  dropdownOptionTextSelected: {
+    fontWeight: '600',
+    color: '#6366f1',
+  },
+  checkmark: {
+    fontSize: 20,
+    color: '#6366f1',
+    fontWeight: 'bold',
+  },
+  dropdownClose: {
+    padding: 16,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  dropdownCloseText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '600',
   },
 });
