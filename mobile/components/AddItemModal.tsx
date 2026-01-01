@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { Store } from '@/types/api';
@@ -53,8 +54,16 @@ export function AddItemModal({ visible, onClose, onSubmit, stores }: AddItemModa
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.overlay}
+      >
+        <Pressable style={styles.overlayTouchable} onPress={onClose} />
         <View style={styles.modal}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
           <Text style={styles.title}>Add Item</Text>
 
           <TextInput
@@ -114,20 +123,21 @@ export function AddItemModal({ visible, onClose, onSubmit, stores }: AddItemModa
             </Pressable>
           )}
 
-          <View style={styles.buttons}>
-            <Pressable style={[styles.button, styles.cancelButton]} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.button, styles.submitButton, (!name.trim() || !selectedStoreId) && styles.buttonDisabled]}
-              onPress={handleSubmit}
-              disabled={!name.trim() || !selectedStoreId}
-            >
-              <Text style={styles.submitButtonText}>Add Item</Text>
-            </Pressable>
-          </View>
+            <View style={styles.buttons}>
+              <Pressable style={[styles.button, styles.cancelButton]} onPress={onClose}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.submitButton, (!name.trim() || !selectedStoreId) && styles.buttonDisabled]}
+                onPress={handleSubmit}
+                disabled={!name.trim() || !selectedStoreId}
+              >
+                <Text style={styles.submitButtonText}>Add Item</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -135,8 +145,11 @@ export function AddItemModal({ visible, onClose, onSubmit, stores }: AddItemModa
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  overlayTouchable: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modal: {
     backgroundColor: 'white',
