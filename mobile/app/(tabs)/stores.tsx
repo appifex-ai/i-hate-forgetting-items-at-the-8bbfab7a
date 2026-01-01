@@ -9,6 +9,8 @@ import {
   RefreshControl,
   Alert,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { storesApi } from '@/lib/api';
 import type { Store } from '@/types/api';
@@ -152,60 +154,72 @@ export default function StoresScreen() {
 
       {/* Add/Edit Store Modal */}
       <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
-        <View style={styles.overlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>{editingStore ? 'Edit Store' : 'Add Store'}</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Store name"
-              value={newStoreName}
-              onChangeText={setNewStoreName}
-              autoFocus
-            />
-
-            <Text style={styles.label}>Choose Icon:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.iconList}>
-              {PRESET_ICONS.map((icon) => (
-                <Pressable
-                  key={icon}
-                  style={[styles.iconButton, selectedIcon === icon && styles.iconButtonSelected]}
-                  onPress={() => setSelectedIcon(icon)}
-                >
-                  <Text style={styles.iconText}>{icon}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-
-            <Text style={styles.label}>Choose Color:</Text>
-            <View style={styles.colorGrid}>
-              {PRESET_COLORS.map((color) => (
-                <Pressable
-                  key={color}
-                  style={[
-                    styles.colorButton,
-                    { backgroundColor: color },
-                    selectedColor === color && styles.colorButtonSelected,
-                  ]}
-                  onPress={() => setSelectedColor(color)}
-                />
-              ))}
-            </View>
-
-            <View style={styles.buttons}>
-              <Pressable style={[styles.button, styles.cancelButton]} onPress={() => setShowAddModal(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.button, styles.submitButton, !newStoreName.trim() && styles.buttonDisabled]}
-                onPress={handleSubmit}
-                disabled={!newStoreName.trim()}
+        <Pressable style={styles.overlay} onPress={() => setShowAddModal(false)}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoid}
+          >
+            <Pressable onPress={(e) => e.stopPropagation()}>
+              <ScrollView
+                style={styles.modal}
+                contentContainerStyle={styles.modalContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.submitButtonText}>{editingStore ? 'Save' : 'Add'}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
+                <Text style={styles.modalTitle}>{editingStore ? 'Edit Store' : 'Add Store'}</Text>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Store name"
+                  value={newStoreName}
+                  onChangeText={setNewStoreName}
+                  autoFocus
+                />
+
+                <Text style={styles.label}>Choose Icon:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.iconList}>
+                  {PRESET_ICONS.map((icon) => (
+                    <Pressable
+                      key={icon}
+                      style={[styles.iconButton, selectedIcon === icon && styles.iconButtonSelected]}
+                      onPress={() => setSelectedIcon(icon)}
+                    >
+                      <Text style={styles.iconText}>{icon}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+
+                <Text style={styles.label}>Choose Color:</Text>
+                <View style={styles.colorGrid}>
+                  {PRESET_COLORS.map((color) => (
+                    <Pressable
+                      key={color}
+                      style={[
+                        styles.colorButton,
+                        { backgroundColor: color },
+                        selectedColor === color && styles.colorButtonSelected,
+                      ]}
+                      onPress={() => setSelectedColor(color)}
+                    />
+                  ))}
+                </View>
+
+                <View style={styles.buttons}>
+                  <Pressable style={[styles.button, styles.cancelButton]} onPress={() => setShowAddModal(false)}>
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.button, styles.submitButton, !newStoreName.trim() && styles.buttonDisabled]}
+                    onPress={handleSubmit}
+                    disabled={!newStoreName.trim()}
+                  >
+                    <Text style={styles.submitButtonText}>{editingStore ? 'Save' : 'Add'}</Text>
+                  </Pressable>
+                </View>
+              </ScrollView>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -307,12 +321,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
+  keyboardAvoid: {
+    width: '100%',
+  },
   modal: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 24,
     maxHeight: '80%',
+  },
+  modalContent: {
+    padding: 24,
   },
   modalTitle: {
     fontSize: 24,
