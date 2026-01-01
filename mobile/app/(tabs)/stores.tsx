@@ -323,15 +323,17 @@ const styles = StyleSheet.create({
   },
   keyboardAvoid: {
     width: '100%',
+    justifyContent: 'flex-end',
   },
   modal: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    maxHeight: '75%',
   },
   modalContent: {
-    padding: 24,
+    padding: 20,
+    paddingBottom: 30,
   },
   modalTitle: {
     fontSize: 24,
