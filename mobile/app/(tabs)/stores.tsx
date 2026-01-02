@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,8 +9,9 @@ import {
   RefreshControl,
   Alert,
   Modal,
-  KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  Animated,
 } from 'react-native';
 import { storesApi } from '@/lib/api';
 import type { Store } from '@/types/api';
@@ -27,6 +28,38 @@ export default function StoresScreen() {
   const [newStoreName, setNewStoreName] = useState('');
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
   const [selectedIcon, setSelectedIcon] = useState(PRESET_ICONS[0]);
+  
+  // Keyboard handling
+  const modalBottom = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        Animated.timing(modalBottom, {
+          toValue: e.endCoordinates.height,
+          duration: Platform.OS === 'ios' ? e.duration : 250,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      (e) => {
+        Animated.timing(modalBottom, {
+          toValue: 0,
+          duration: Platform.OS === 'ios' ? e.duration : 250,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, [modalBottom]);
 
   const loadStores = async () => {
     try {
@@ -155,10 +188,7 @@ export default function StoresScreen() {
       {/* Add/Edit Store Modal */}
       <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
         <Pressable style={styles.overlay} onPress={() => setShowAddModal(false)}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'position' : 'height'}
-            style={styles.keyboardAvoid}
-          >
+          <Animated.View style={[styles.modalContainer, { bottom: modalBottom }]}>
             <Pressable onPress={(e) => e.stopPropagation()}>
               <ScrollView
                 style={styles.modal}
@@ -219,7 +249,7 @@ export default function StoresScreen() {
                 </View>
               </ScrollView>
             </Pressable>
-          </KeyboardAvoidingView>
+          </Animated.View>
         </Pressable>
       </Modal>
     </View>
@@ -322,15 +352,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  keyboardAvoid: {
+  modalContainer: {
     width: '100%',
-    justifyContent: 'flex-end',
   },
   modal: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '85%',
+    maxHeight: 600,
   },
   modalContent: {
     padding: 20,
