@@ -100,6 +100,16 @@ export default function ShoppingListScreen() {
   const uncheckedItems = filteredItems.filter((item) => !item.is_checked);
   const checkedItems = filteredItems.filter((item) => item.is_checked);
 
+  // Group checked items by store
+  const groupedCheckedItems = checkedItems.reduce((acc, item) => {
+    const storeId = item.store_id;
+    if (!acc[storeId]) {
+      acc[storeId] = [];
+    }
+    acc[storeId].push(item);
+    return acc;
+  }, {} as Record<number, ShoppingItem[]>);
+
   // Get selected store info
   const selectedStore = selectedStoreId 
     ? stores.find((s) => s.id === selectedStoreId)
@@ -181,25 +191,45 @@ export default function ShoppingListScreen() {
           );
         })}
 
-        {/* Checked items */}
+        {/* Checked items grouped by store */}
         {checkedItems.length > 0 && (
           <View style={styles.checkedSection}>
-            <Text style={styles.checkedTitle}>✓ Completed ({checkedItems.length})</Text>
-            {checkedItems.map((item) => (
-              <SwipeableItem
-                key={item.id}
-                onSwipeRight={() => handleToggleCheck(item)}
-                onSwipeLeft={() => handleDeleteItem(item)}
-                rightIcon="↩"
-              >
-                <View style={[styles.itemCard, styles.checkedItem]}>
-                  <View style={styles.itemContent}>
-                    <Text style={styles.itemNameChecked}>{item.name}</Text>
-                    <Text style={styles.itemQuantity}>{item.quantity}</Text>
+            <Text style={styles.checkedSectionTitle}>✓ Completed ({checkedItems.length})</Text>
+            
+            {Object.entries(groupedCheckedItems).map(([storeId, storeItems]) => {
+              const store = stores.find((s) => s.id === Number(storeId));
+              
+              return (
+                <View key={`checked-${storeId}`} style={styles.storeSection}>
+                  <View style={[styles.storeHeader, styles.checkedStoreHeader, { backgroundColor: store?.color }]}>
+                    <Text style={styles.storeIcon}>{store?.icon}</Text>
+                    <Text style={styles.storeName}>{store?.name}</Text>
+                    <Text style={styles.itemCount}>{storeItems.length}</Text>
                   </View>
+
+                  {storeItems.map((item) => (
+                    <SwipeableItem
+                      key={item.id}
+                      onSwipeRight={() => handleToggleCheck(item)}
+                      onSwipeLeft={() => handleDeleteItem(item)}
+                      rightIcon="↩"
+                    >
+                      <View style={[styles.itemCard, styles.checkedItem]}>
+                        <View style={styles.itemContent}>
+                          <Text style={styles.itemNameChecked}>{item.name}</Text>
+                          <Text style={styles.itemQuantity}>{item.quantity}</Text>
+                          {item.need_by_date && (
+                            <Text style={styles.itemDate}>
+                              Need by: {new Date(item.need_by_date).toLocaleDateString()}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    </SwipeableItem>
+                  ))}
                 </View>
-              </SwipeableItem>
-            ))}
+              );
+            })}
           </View>
         )}
 
@@ -401,13 +431,16 @@ const styles = StyleSheet.create({
   },
   checkedSection: {
     marginTop: 24,
+  },
+  checkedSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#6b7280',
+    marginBottom: 12,
     marginHorizontal: 16,
   },
-  checkedTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginBottom: 8,
+  checkedStoreHeader: {
+    opacity: 0.8,
   },
   checkedItem: {
     opacity: 0.6,
