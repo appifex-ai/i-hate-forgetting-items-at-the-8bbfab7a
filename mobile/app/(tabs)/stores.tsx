@@ -156,9 +156,8 @@ export default function StoresScreen() {
       <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
         <Pressable style={styles.overlay} onPress={() => setShowAddModal(false)}>
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === 'ios' ? 'position' : 'height'}
             style={styles.keyboardAvoid}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? -120 : 0}
           >
             <Pressable onPress={(e) => e.stopPropagation()}>
               <ScrollView
@@ -166,6 +165,7 @@ export default function StoresScreen() {
                 contentContainerStyle={styles.modalContent}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
+                bounces={false}
               >
                 <Text style={styles.modalTitle}>{editingStore ? 'Edit Store' : 'Add Store'}</Text>
 
@@ -330,11 +330,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '75%',
+    maxHeight: '85%',
   },
   modalContent: {
     padding: 20,
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
   modalTitle: {
     fontSize: 24,
