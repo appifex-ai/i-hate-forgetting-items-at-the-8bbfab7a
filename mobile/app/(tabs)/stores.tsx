@@ -158,6 +158,7 @@ export default function StoresScreen() {
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardAvoid}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? -120 : 0}
           >
             <Pressable onPress={(e) => e.stopPropagation()}>
               <ScrollView
